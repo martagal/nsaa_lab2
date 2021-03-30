@@ -3,12 +3,16 @@ const express = require('express')
 const logger = require('morgan')
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
+const JwtStrategy = require('passport-jwt').Strategy
 const jwt = require('jsonwebtoken')
+ 
 
 const jwtSecret = require('crypto').randomBytes(32) //32 random bytes secret everytime we bring up the server
 console.log(`Token secret: ${jwtSecret.toString('base64')}`)
 
 const cookieParser = require('cookie-parser')
+
+const fortune = require('fortune-teller')
 
 const port = 3000 //standard for development
 
@@ -47,13 +51,38 @@ const myLogger = (req, res, next) => {
 
 app.use(myLogger)
 
+app.use(cookieParser())
+
 app.use(function(err, req, res, next) {
     console.log(err.stack)
     res.status(500).send('there was an error')
 })
 
-app.get('/', (req, res) => {
-    res.send('hello world')
+var cookieExtractor = function(req) {
+    var token = null;
+    if (req && req.cookies)
+    {
+        token = req.cookies['jwt'];
+    }
+    return token;
+};
+
+passport.use('jwt', new JwtStrategy(
+    {
+        jwtFromRequest : cookieExtractor, 
+        secretOrKey: jwtSecret
+    },
+    function (token, done){
+        console.log('holiwi colegui')
+        done(null, user)
+    }    
+))
+
+
+app.post('/', passport.authenticate('jwt', {session: false}), 
+(req, res) => {
+    var adage = fortune.fortune()
+    res.send(`WELCOME TO THE FORTUNE TELLER: ${adage}`)
 })
 
 app.get('/user', (req, res) => {
@@ -66,6 +95,10 @@ app.get('/user', (req, res) => {
 
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'))
+})
+
+app.get('/logout', (req, res) => {
+    res.sendFile(path.join(__dirname, 'logout.html'))
 })
 
 app.post('/login', 
@@ -82,6 +115,12 @@ app.post('/login',
     console.log(token)
     //res.send(token)
     res.cookie('cookie_token', token).redirect('/')
+})
+
+app.post('/logout', (req, res) => {
+    req.cookies
+    res.clearCookie("cookie_token").redirect('login')
+    console.log('Empty Cookies: ', req.cookies)
 })
 
 
