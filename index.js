@@ -5,10 +5,11 @@ const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 const JwtStrategy = require('passport-jwt').Strategy
 const jwt = require('jsonwebtoken')
- 
 
 const jwtSecret = require('crypto').randomBytes(32) //32 random bytes secret everytime we bring up the server
 console.log(`Token secret: ${jwtSecret.toString('base64')}`)
+
+const MongoClient = require('mongodb').MongoClient
 
 const cookieParser = require('cookie-parser')
 
@@ -62,7 +63,7 @@ var cookieExtractor = function(req) {
     var token = null;
     if (req && req.cookies)
     {
-        token = req.cookies['jwt'];
+        token = req.cookies['cookie_token'];
     }
     return token;
 };
@@ -74,15 +75,15 @@ passport.use('jwt', new JwtStrategy(
     },
     function (token, done){
         console.log('holiwi colegui')
-        done(null, user)
+        done(null, token)
     }    
 ))
 
 
-app.post('/', passport.authenticate('jwt', {session: false}), 
+app.get('/', passport.authenticate('jwt', {session: false,  failureRedirect:'/login'} ), 
 (req, res) => {
     var adage = fortune.fortune()
-    res.send(`WELCOME TO THE FORTUNE TELLER: ${adage}`)
+    res.send(`WELCOME TO THE FORTUNE TELLER: ${adage} <p><a href ='/logout'>Logout</a></p>`)
 })
 
 app.get('/user', (req, res) => {
@@ -95,6 +96,10 @@ app.get('/user', (req, res) => {
 
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'))
+})
+
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'register.html'))
 })
 
 app.get('/logout', (req, res) => {
@@ -112,10 +117,12 @@ app.post('/login',
         exp: Math.floor(Date.now()/1000) + 604800 //1 week before expiration
     }
     const token = jwt.sign(payload, jwtSecret)
-    console.log(token)
+    //console.log(token)
     //res.send(token)
     res.cookie('cookie_token', token).redirect('/')
 })
+
+//register
 
 app.post('/logout', (req, res) => {
     req.cookies
