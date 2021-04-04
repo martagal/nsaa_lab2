@@ -57,4 +57,37 @@ res.clearCookie('cookie_token').redirect('login')
 
 ## 6.4. Add bcrypt or scrypt to the login process
 
+The file _psw.json_ contains a JSON of two users (_walrus_ and _walrus2_) and their correspondent Bcrypt hash of the passwords (_walrus_ and _walrus2_), generated online. 
 
+Using the package ```bcryptjs```, in the Passport local Strategy (from line 25 to 45 of _index.js_), the login data is verified against the file _psw.json_. 
+
+```
+passport.use('local', new LocalStrategy(
+    {
+        usernameField: 'username',
+        passwordField: 'password', 
+        session: false
+    },
+    function (username, password, done){
+        const psw = db[username]
+        if (psw && bcrypt.compareSync(password, psw)){
+            const user = {
+                username : username, 
+                description: 'you can visit the fortune teller'
+            }
+            done(null, user) //first arg: error (null)
+        }
+        else {
+            console.log('Wrong login')
+            done(null, false)
+        }
+    }
+))
+```
+
+If the login is correct, the user's cookie is created. Otherwise, it is redirected to the login page again. 
+
+```
+passport.authenticate('local', {session:false, failureRedirect:'/login'})
+```
+(line 108 of _index.js_)
