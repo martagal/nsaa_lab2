@@ -11,7 +11,7 @@ const bcrypt = require('bcryptjs')
 const jwtSecret = require('crypto').randomBytes(32) //32 random bytes secret everytime we bring up the server
 console.log(`Token secret: ${jwtSecret.toString('base64')}`)
 
-const MongoClient = require('mongodb').MongoClient
+
 
 const cookieParser = require('cookie-parser')
 
