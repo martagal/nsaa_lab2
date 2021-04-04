@@ -123,9 +123,7 @@ app.post('/login',
 
 
 app.post('/logout', (req, res) => {
-    req.cookies
-    res.clearCookie("cookie_token").redirect('login')
-    console.log('Empty Cookies: ', req.cookies)
+    res.clearCookie('cookie_token').redirect('login')
 })
 
 
