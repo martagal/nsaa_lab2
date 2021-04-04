@@ -5,6 +5,8 @@ const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 const JwtStrategy = require('passport-jwt').Strategy
 const jwt = require('jsonwebtoken')
+const db = require('./psw.json')
+const bcrypt = require('bcryptjs')
 
 const jwtSecret = require('crypto').randomBytes(32) //32 random bytes secret everytime we bring up the server
 console.log(`Token secret: ${jwtSecret.toString('base64')}`)
@@ -27,14 +29,16 @@ passport.use('local', new LocalStrategy(
         session: false
     },
     function (username, password, done){
-        if(username === 'walrus' && password === 'walrus') {
+        const psw = db[username]
+        if (psw && bcrypt.compareSync(password, psw)){
             const user = {
-                username : 'walrus', 
+                username : username, 
                 description: 'you can visit the fortune teller'
             }
             done(null, user) //first arg: error (null)
         }
         else {
+            console.log('Wrong login')
             done(null, false)
         }
     }
@@ -74,7 +78,6 @@ passport.use('jwt', new JwtStrategy(
         secretOrKey: jwtSecret
     },
     function (token, done){
-        console.log('holiwi colegui')
         done(null, token)
     }    
 ))
@@ -98,10 +101,6 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'))
 })
 
-app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'register.html'))
-})
-
 app.get('/logout', (req, res) => {
     res.sendFile(path.join(__dirname, 'logout.html'))
 })
@@ -122,7 +121,6 @@ app.post('/login',
     res.cookie('cookie_token', token).redirect('/')
 })
 
-//register
 
 app.post('/logout', (req, res) => {
     req.cookies
