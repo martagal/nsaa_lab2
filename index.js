@@ -86,7 +86,7 @@ passport.use('jwt', new JwtStrategy(
 app.get('/', passport.authenticate('jwt', {session: false,  failureRedirect:'/login'} ), 
 (req, res) => {
     var adage = fortune.fortune()
-    res.send(`WELCOME TO THE FORTUNE TELLER: ${adage} <p><a href ='/logout'>Logout</a></p>`)
+    res.send(`WELCOME TO THE FORTUNE TELLER: <p> ${adage} <p> <p><a href ='/logout'>Logout</a></p>`)
 })
 
 app.get('/user', (req, res) => {
