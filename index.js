@@ -4,6 +4,7 @@ const logger = require('morgan')
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 const JwtStrategy = require('passport-jwt').Strategy
+const GitHubStrategy = require('passport-github2').Strategy
 const jwt = require('jsonwebtoken')
 const db = require('./psw.json')
 const bcrypt = require('bcryptjs')
@@ -11,7 +12,8 @@ const bcrypt = require('bcryptjs')
 const jwtSecret = require('crypto').randomBytes(32) //32 random bytes secret everytime we bring up the server
 console.log(`Token secret: ${jwtSecret.toString('base64')}`)
 
-
+const  GITHUB_CLIENT_ID = "9f3160e536e354319109"
+const GITHUB_CLIENT_SECRET = "c08e3b3081334817c9db52f804cce10ab4309686"
 
 const cookieParser = require('cookie-parser')
 
@@ -43,6 +45,17 @@ passport.use('local', new LocalStrategy(
         }
     }
 ))
+
+passport.use('github', new GitHubStrategy({
+    clientID: GITHUB_CLIENT_ID,
+    clientSecret: GITHUB_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/github/callback"
+  },
+  function(accessToken, refreshToken, profile, done) {
+    //console.log(profile)
+    done(null, profile)
+  }
+));
 
 app.use(express.urlencoded({extended: true})) //needed to retrieve html forms
 app.use(passport.initialize()) // we load the passport auth middleware to our express application. It should be loaded before any route.
@@ -125,11 +138,21 @@ app.post('/login',
     res.cookie('cookie_token', token).redirect('/')
 })
 
+app.get('/auth/github',
+  passport.authenticate('github', {session:false, scope: [ 'profile' ] }));
+
+app.get('/auth/github/callback', 
+  passport.authenticate('github',  {session:false,  failureRedirect:'/login'}),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    console.log('HEMOS ENTRADO A GITHUB')
+    res.redirect('/');
+  });
+
 
 app.post('/logout', (req, res) => {
     res.clearCookie('cookie_token').redirect('login')
 })
-
 
 
 app.listen(port, function() {
