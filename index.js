@@ -113,7 +113,11 @@ app.post('/login',
         iss: 'localhost:3000', //issuer
         sub: req.user.username, //subject
         aud: 'localhost:3000', //audience
-        exp: Math.floor(Date.now()/1000) + 604800 //1 week before expiration
+        exp: Math.floor(Date.now()/1000) + 604800, //1 week before expiration
+        exam: {
+            name: 'marta', 
+            surname: 'galindo'
+        }
     }
     const token = jwt.sign(payload, jwtSecret)
     //console.log(token)
