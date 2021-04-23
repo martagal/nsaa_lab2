@@ -21,6 +21,8 @@ const fortune = require('fortune-teller')
 
 const port = 3000 //standard for development
 
+var payload = null
+
 const app = express()
 app.use(logger('dev'))
 
@@ -121,7 +123,7 @@ app.get('/logout', (req, res) => {
 app.post('/login', 
  passport.authenticate('local', {session:false, failureRedirect:'/login'}),  //call authenticate middleware before function handler
  (req, res) => {
-    const payload = {
+    payload = {
         //token can be checked at https://jwt.io/
         iss: 'localhost:3000', //issuer
         sub: req.user.username, //subject
@@ -145,9 +147,22 @@ app.get('/auth/github/callback',
   passport.authenticate('github',  {session:false,  failureRedirect:'/login'}),
   function(req, res) {
     // Successful authentication, redirect home.
-    console.log('HEMOS ENTRADO A GITHUB')
-    res.redirect('/');
-  });
+    //console.log('HEMOS ENTRADO A GITHUB')
+    payload = {
+        //token can be checked at https://jwt.io/
+        iss: 'localhost:3000', //issuer
+        sub: req.user.username, //subject
+        aud: 'localhost:3000', //audience
+        exp: Math.floor(Date.now()/1000) + 604800, //1 week before expiration
+        exam: {
+            name: 'marta', 
+            surname: 'galindo'
+        }
+    }
+    const token = jwt.sign(payload, jwtSecret)
+    res.cookie('cookie_token', token).redirect('/')
+    }
+);
 
 
 app.post('/logout', (req, res) => {
