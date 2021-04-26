@@ -126,7 +126,6 @@ app.get('/auth/github/callback',
   passport.authenticate('github',  {session:false,  failureRedirect:'/login'}),
   function(req, res) {
     // Successful authentication, redirect home.
-    //console.log('HEMOS ENTRADO A GITHUB')
     payload = {
         //token can be checked at https://jwt.io/
         iss: 'localhost:3000', //issuer
