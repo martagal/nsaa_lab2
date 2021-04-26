@@ -1,5 +1,7 @@
 # NSAA Lab2: Express + Passport
 
+(Lab3 at the end of README.MD) 
+
 Do-it-yourself exercises after completing the tutorial.
 ## 6.1. Exchange the JWT using cookies
 
@@ -91,3 +93,54 @@ If the login is correct, the user's cookie is created. Otherwise, it is redirect
 passport.authenticate('local', {session:false, failureRedirect:'/login'})
 ```
 (line 108 of _index.js_)
+
+# NSAA Lab3: OAuth
+
+Added Login functionality: now the user can log in using his or her GitHub account. For that, a new button (Login with GitHub) is added in the _login.html_ page.  The passport strategy ```passport-github2``` is used for authenticating with GitHub using the OAuth 2.0 API.
+
+A new strategy is defined:
+
+```
+passport.use('github', new GitHubStrategy({
+    clientID: GITHUB_CLIENT_ID,
+    clientSecret: GITHUB_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/github/callback"
+  },
+  function(accessToken, refreshToken, profile, done) {
+    //console.log(profile)
+    done(null, profile)
+  }
+));
+```
+
+_GITHUB_CLIENT_ID_ and _GITHUB_CLIENT_SECRET_ are defined at the top of the code, with the values got from registering the OAuth app in GitHub. 
+
+To authenticate requests: 
+
+
+```
+app.get('/auth/github',
+  passport.authenticate('github', {session:false, scope: [ 'profile' ] }));
+
+app.get('/auth/github/callback', 
+  passport.authenticate('github',  {session:false,  failureRedirect:'/login'}),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    //console.log('HEMOS ENTRADO A GITHUB')
+    payload = {
+        //token can be checked at https://jwt.io/
+        iss: 'localhost:3000', //issuer
+        sub: req.user.username, //subject
+        aud: 'localhost:3000', //audience
+        exp: Math.floor(Date.now()/1000) + 604800, //1 week before expiration
+        exam: {
+            name: 'marta', 
+            surname: 'galindo'
+        }
+    }
+    const token = jwt.sign(payload, jwtSecret)
+    res.cookie('cookie_token', token).redirect('/')
+    }
+);
+
+```

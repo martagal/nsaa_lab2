@@ -12,7 +12,7 @@ const bcrypt = require('bcryptjs')
 const jwtSecret = require('crypto').randomBytes(32) //32 random bytes secret everytime we bring up the server
 console.log(`Token secret: ${jwtSecret.toString('base64')}`)
 
-const  GITHUB_CLIENT_ID = "9f3160e536e354319109"
+const GITHUB_CLIENT_ID = "9f3160e536e354319109"
 const GITHUB_CLIENT_SECRET = "c08e3b3081334817c9db52f804cce10ab4309686"
 
 const cookieParser = require('cookie-parser')
@@ -164,11 +164,9 @@ app.get('/auth/github/callback',
     }
 );
 
-
 app.post('/logout', (req, res) => {
     res.clearCookie('cookie_token').redirect('login')
 })
-
 
 app.listen(port, function() {
  console.log(`Listening at http://localhost:${port}`) //con las quotes estas al reves se pueden usar variables inside con ${}
