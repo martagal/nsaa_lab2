@@ -10,6 +10,7 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.5",
+    "dgram": "^1.0.1",
     "express": "^4.17.1",
     "fortune-teller": "^0.1.2",
     "jsonwebtoken": "^8.5.1",
@@ -19,8 +20,16 @@
     "passport": "^0.4.1",
     "passport-github2": "^0.1.12",
     "passport-jwt": "^4.0.0",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "radius": "^1.1.4"
   },
-  "devDependencies": {},
-  "description": ""
+  "description": "(Lab3 at the end of README.MD)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/martagal/nsaa_lab2.git"
+  },
+  "bugs": {
+    "url": "https://github.com/martagal/nsaa_lab2/issues"
+  },
+  "homepage": "https://github.com/martagal/nsaa_lab2#readme"
 }

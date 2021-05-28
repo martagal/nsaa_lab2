@@ -8,12 +8,16 @@ const GitHubStrategy = require('passport-github2').Strategy
 const jwt = require('jsonwebtoken')
 const db = require('./psw.json')
 const bcrypt = require('bcryptjs')
+const radius = require('radius')
+const dgram = require('dgram')
 
 const jwtSecret = require('crypto').randomBytes(32) //32 random bytes secret everytime we bring up the server
-console.log(`Token secret: ${jwtSecret.toString('base64')}`)
+//console.log(`Token secret: ${jwtSecret.toString('base64')}`)
 
 const GITHUB_CLIENT_ID = "9f3160e536e354319109"
 const GITHUB_CLIENT_SECRET = "c08e3b3081334817c9db52f804cce10ab4309686"
+
+const RADIUS_SECRET = "testing123"
 
 const cookieParser = require('cookie-parser')
 
@@ -54,10 +58,56 @@ passport.use('github', new GitHubStrategy({
     callbackURL: "http://localhost:3000/auth/github/callback"
   },
   function(accessToken, refreshToken, profile, done) {
-    //console.log(profile)
+    //console.log(profile)  
     done(null, profile)
   }
-));
+))
+
+passport.use('radius', new LocalStrategy(
+    {
+        usernameField: 'username',
+        passwordField: 'password', 
+        session: false
+    },
+    function (username, password, done){
+        let packet = radius.encode({
+            code: "Access-Request",
+            secret: RADIUS_SECRET,
+            attributes: [
+              ['NAS-IP-Address', '127.0.0.1'],
+              ['User-Name', username],
+              ['User-Password', password]
+            ]
+        });
+
+        let client = dgram.createSocket("udp4")
+        client.on('message', function(msg) {
+            let res = radius.decode({packet: msg, secret: RADIUS_SECRET})
+            let valid_response = radius.verify_response({
+                response: msg,
+                request: packet,
+                secret: RADIUS_SECRET
+            });
+            if (valid_response) {
+                if(res.code == 'Access-Accept'){
+                    done(null, res)
+                }
+                else if (res.code == 'Access-Reject') {
+                    console.log(res.attributes)
+                    done(null, false)
+                }
+                else {
+                    console.log('Wrong Password')
+                    done(null, false)
+                }
+            }
+            else {
+                console.log('sth went wrong')
+            }
+        })
+        client.send(packet, 0, packet.length, 1812, "localhost");
+    }
+))
 
 app.use(express.urlencoded({extended: true})) //needed to retrieve html forms
 app.use(passport.initialize()) // we load the passport auth middleware to our express application. It should be loaded before any route.
@@ -116,6 +166,10 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'))
 })
 
+app.get('/loginfreeradius', (req, res) => {
+    res.sendFile(path.join(__dirname, 'loginfreeradius.html'))
+})
+
 app.get('/logout', (req, res) => {
     res.sendFile(path.join(__dirname, 'logout.html'))
 })
@@ -163,6 +217,21 @@ app.get('/auth/github/callback',
     res.cookie('cookie_token', token).redirect('/')
     }
 );
+
+app.post('/loginfreeradius', 
+ passport.authenticate('radius', {session:false, failureRedirect:'/loginfreeradius'}),  
+ (req, res) => {
+    payload = {
+        //token can be checked at https://jwt.io/
+        iss: 'localhost:3000', //issuer
+        sub: req.user.username, //subject
+        aud: 'localhost:3000', //audience
+        exp: Math.floor(Date.now()/1000) + 604800, 
+    }
+    const token = jwt.sign(payload, jwtSecret)
+    //console.log(token)
+    res.cookie('cookie_token', token).redirect('/')
+})
 
 app.post('/logout', (req, res) => {
     res.clearCookie('cookie_token').redirect('login')

@@ -3,13 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>Login FreeRADIUS</title>
 </head>
 
 <body>
     <p><strong>Want to listen to the fortune-teller server?</strong></p>
-    <p>Please login to proceed</p>
-    <form action="/login" method="post">  <!-- when the formulary is submitted, it will be POSTed to /login-->
+    <p>Please login with FreeRADIUS to proceed</p>
+    <form action="/loginfreeradius" method="post">  
         <div>
             <label>Username:</label>
             <input type="text" name="username" />
@@ -22,8 +22,6 @@
             <input type="submit" value="Log In" />
         </div>
     </form>
-    <a href="http://localhost:3000/auth/github">Login with GitHub</a>
-    <a href="http://localhost:3000/loginfreeradius">Login with FreeRADIUS</a>
 
 </body>
 
